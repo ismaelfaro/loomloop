@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "loomloop"
+version = "0.1.0"
+description = "Coordinate many autonomous agents by weaving their nanoloops together."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "LoomLoop" }]
+keywords = ["agents", "multi-agent", "orchestration", "asyncio", "nanoloop", "llm"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries",
+]
+dependencies = []
+
+[project.optional-dependencies]
+llm = ["anthropic>=0.40"]
+dev = ["pytest>=7"]
+
+[project.scripts]
+loomloop = "loomloop.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/ismaelfaro/loomloop"
+
+[tool.setuptools.packages.find]
+include = ["loomloop*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
