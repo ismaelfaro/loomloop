@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "loomloop"
-version = "0.1.0"
+version = "0.2.0"
 description = "Coordinate many autonomous agents by weaving their nanoloops together."
 readme = "README.md"
 requires-python = ">=3.9"

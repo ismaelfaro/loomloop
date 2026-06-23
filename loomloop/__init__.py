@@ -35,9 +35,10 @@ from .blackboard import Blackboard
 from .nanoloop import NanoLoop, Context, Step, Status
 from .scheduler import Scheduler, AllReady, RoundRobin, Priority
 from .loom import Loom
-from .agents import FunctionLoop, RelayLoop
+from .backend import Backend, EchoBackend, CallableBackend, ClaudeBackend
+from .agents import FunctionLoop, RelayLoop, nanoloop, BrainLoop, LLMLoop
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "Message",
@@ -52,6 +53,15 @@ __all__ = [
     "RoundRobin",
     "Priority",
     "Loom",
+    # model backends (provider-agnostic)
+    "Backend",
+    "EchoBackend",
+    "CallableBackend",
+    "ClaudeBackend",
+    # agents
     "FunctionLoop",
     "RelayLoop",
+    "nanoloop",
+    "BrainLoop",
+    "LLMLoop",
 ]

@@ -1,10 +1,12 @@
 """Ready-made nanoloops.
 
-``FunctionLoop`` and ``RelayLoop`` are pure-stdlib and always available.
-``LLMLoop`` is imported lazily because it depends on the optional ``anthropic``
-package — import it directly from :mod:`loomloop.agents.llm` when you need it.
+All of these are pure-stdlib. ``BrainLoop`` is model-agnostic — it only needs a
+:class:`loomloop.backend.Backend`; a specific provider SDK (e.g. ``anthropic``
+via :class:`loomloop.backend.ClaudeBackend`) is only imported when you choose
+that backend.
 """
 
-from .function import FunctionLoop, RelayLoop
+from .function import FunctionLoop, RelayLoop, nanoloop
+from .brain import BrainLoop, LLMLoop
 
-__all__ = ["FunctionLoop", "RelayLoop"]
+__all__ = ["FunctionLoop", "RelayLoop", "nanoloop", "BrainLoop", "LLMLoop"]

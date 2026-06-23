@@ -23,8 +23,10 @@ so a handful of tiny, single-purpose loops become a coordinated collective.
 ```
 
 No heavy dependencies — the core is pure-stdlib `asyncio`. Agents can be plain
-Python functions, classes, or **Claude-backed** (optional) for genuinely
-autonomous decision-making.
+Python functions, classes, or **model-backed** for genuinely autonomous
+decision-making. LoomLoop is **provider-agnostic**: a brain agent talks to a
+pluggable `Backend`, so the same system runs offline (a mock), on Claude, or on
+any model you wrap — swap the backend, not the agents.
 
 ---
 
@@ -61,6 +63,28 @@ async def main():
 asyncio.run(main())
 ```
 
+The same agents, written with the `@nanoloop` decorator — the function *is* the
+loop:
+
+```python
+from loomloop import nanoloop, Loom, Step
+
+@nanoloop
+async def pinger(ctx):
+    ctx.send("ping", {"n": ctx.tick})
+    return Step.cont()
+
+@nanoloop(subscribe=["ping"])
+async def ponger(ctx):
+    for msg in ctx.recv_all():
+        ctx.log("got", msg.payload)
+    return Step.wait()
+
+loom = Loom()
+loom.add(pinger)
+loom.add(ponger)
+```
+
 Or from the CLI:
 
 ```bash
@@ -79,6 +103,7 @@ python -m loomloop run examples/swarm.py # worker swarm pulling a shared queue
 | **`MessageBus`** | In-process pub/sub. Topic fan-out, or direct addressing with `to=`. |
 | **`Blackboard`** | Shared, versioned key/value workspace with an audit trail. |
 | **`Scheduler`** | Decides which ready agents run each tick: `AllReady` (default), `RoundRobin`, `Priority`. |
+| **`Backend`** | A pluggable model for `BrainLoop`: `EchoBackend`, `CallableBackend`, `ClaudeBackend`, or your own. Keeps LoomLoop provider-agnostic. |
 
 ### How a tick works
 
@@ -101,30 +126,46 @@ grab the same item (see `examples/swarm.py`).
   wired purely by topic names.
 - **`examples/swarm.py`** — N interchangeable workers pulling from one shared
   blackboard queue, with a supervisor that ends the run.
-- **Claude-backed agents** — drop in `LLMLoop` to make an agent's decision a Claude
-  completion instead of a hand-written rule:
+- **`examples/brains.py`** — two model-backed agents (`planner` → `critic`) wired
+  to a pluggable backend. Runs offline by default; set `LOOMLOOP_BACKEND=claude`
+  to use a real model.
+
+### Model-agnostic brain agents
+
+`BrainLoop` makes an agent's decision a model call instead of a hand-written rule
+— but it talks only to a `Backend`, so it's not tied to any provider:
 
 ```python
-from loomloop import Loom
-from loomloop.agents.llm import LLMLoop   # needs: pip install -e ".[llm]"
+from loomloop import Loom, BrainLoop, EchoBackend, ClaudeBackend
+
+backend = EchoBackend()          # offline/test: deterministic, no deps
+# backend = ClaudeBackend()      # real autonomy: needs pip install ".[llm]" + ANTHROPIC_API_KEY
 
 loom = Loom()
-loom.add(LLMLoop(
+loom.add(BrainLoop(
     "researcher",
-    system="You break a goal into 3 concrete sub-tasks. Reply as a numbered list.",
+    backend=backend,
+    system="Break a goal into 3 concrete sub-tasks. Reply as a numbered list.",
     listen=["goals"],
     emit="tasks",
 ))
-loom.add(LLMLoop(
+loom.add(BrainLoop(
     "critic",
-    system="You review a task list and flag the riskiest item in one sentence.",
+    backend=backend,
+    system="Review a task list and flag the riskiest item in one sentence.",
     listen=["tasks"],
 ))
 ```
 
-`LLMLoop` uses **Claude Opus 4.8** with adaptive thinking by default and an async
-client, so a slow model call on one agent doesn't stall the others on the tick.
-Set `ANTHROPIC_API_KEY` in your environment.
+Built-in backends: `EchoBackend` (deterministic, no deps), `CallableBackend`
+(wrap any `fn(prompt) -> str`), and `ClaudeBackend` (Claude Opus 4.8 with
+adaptive thinking, async client). Roll your own by implementing one method:
+
+```python
+class MyBackend:
+    async def generate(self, prompt, *, system="", history=None) -> str:
+        ...
+```
 
 ## Run the tests
 
@@ -141,9 +182,10 @@ loomloop/
   bus.py         # MessageBus (pub/sub)
   blackboard.py  # Blackboard (shared versioned state)
   scheduler.py   # AllReady / RoundRobin / Priority
-  agents/        # FunctionLoop, RelayLoop, and the optional Claude-backed LLMLoop
+  backend.py     # Backend protocol + Echo / Callable / Claude backends
+  agents/        # FunctionLoop, RelayLoop, @nanoloop, and the agnostic BrainLoop
   cli.py         # python -m loomloop ...
-examples/        # pipeline + swarm
+examples/        # pipeline + swarm + brains
 tests/           # pytest suite
 ```
 

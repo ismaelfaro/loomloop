@@ -2,12 +2,40 @@
 
 from __future__ import annotations
 
-from typing import Awaitable, Callable, List, Optional
+from typing import Awaitable, Callable, List, Optional, Union
 
 from ..nanoloop import Context, NanoLoop, Step
 
 
 StepFn = Callable[[Context], Awaitable[Step]]
+
+
+def nanoloop(
+    fn: Optional[StepFn] = None,
+    *,
+    name: Optional[str] = None,
+    subscribe: Optional[List[str]] = None,
+) -> Union[NanoLoop, Callable[[StepFn], NanoLoop]]:
+    """Decorator that turns an ``async def step(ctx)`` into a nanoloop.
+
+    The most direct way to declare an agent — the function *is* the loop::
+
+        @nanoloop(subscribe=["ping"])
+        async def ponger(ctx):
+            for msg in ctx.recv_all():
+                ctx.log("got", msg.payload)
+            return Step.wait()
+
+        loom.add(ponger)
+
+    The agent's name defaults to the function name; override with ``name=``.
+    Usable bare (``@nanoloop``) or called (``@nanoloop(subscribe=[...])``).
+    """
+
+    def wrap(f: StepFn) -> NanoLoop:
+        return FunctionLoop(name or f.__name__, f, subscriptions=subscribe)
+
+    return wrap if fn is None else wrap(fn)
 
 
 class FunctionLoop(NanoLoop):
