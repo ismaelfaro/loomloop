@@ -10,13 +10,18 @@ quiescent (no agent can make progress and no mail is in flight).
 from __future__ import annotations
 
 import asyncio
+import json
+import os
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 from .blackboard import Blackboard
 from .bus import MessageBus
 from .nanoloop import Context, NanoLoop, Status, Step
 from .scheduler import AllReady, Scheduler
+
+if TYPE_CHECKING:  # pragma: no cover
+    from .oak import OakRepo
 
 
 @dataclass
@@ -28,6 +33,7 @@ class AgentRecord:
     wake_tick: int = 0          # earliest tick this agent may run again
     started: bool = False       # has setup() run yet?
     steps: int = 0
+    branch: Optional[str] = None  # Oak session branch (branch-per-session)
 
     @property
     def is_done(self) -> bool:
@@ -41,12 +47,19 @@ class Loom:
         scheduler: Optional[Scheduler] = None,
         tick_interval: float = 0.0,
         logger: Optional[Callable[[str], None]] = None,
+        workspace: Optional["OakRepo"] = None,
+        branch_per_session: bool = False,
+        snapshot: bool = False,
     ) -> None:
         self.bus = MessageBus()
         self.blackboard = Blackboard()
         self.scheduler = scheduler or AllReady()
         self.tick_interval = tick_interval
         self.tick = 0
+        # Oak: the optional versioned substrate agents collaborate through.
+        self.workspace = workspace
+        self.branch_per_session = branch_per_session
+        self.snapshot = snapshot
         self._records: Dict[str, AgentRecord] = {}
         self._pending_add: List[AgentRecord] = []
         self._stopped = False
@@ -130,7 +143,32 @@ class Loom:
 
         report.messages = self.bus.delivered
         report.blackboard = self.blackboard.snapshot()
+        self._snapshot_run(report)
         return report
+
+    def _snapshot_run(self, report: "RunReport") -> None:
+        """Commit a manifest of this run into Oak — versioned run history."""
+        if self.workspace is None or not self.snapshot:
+            return
+        manifest = {
+            "ticks": report.ticks,
+            "steps": report.steps,
+            "messages": report.messages,
+            "errors": report.errors,
+            "agents": [r.agent.name for r in self._records.values()],
+            "blackboard": report.blackboard,
+        }
+        path = "loomloop-run.json"
+        try:
+            with open(os.path.join(self.workspace.root, path), "w") as fh:
+                json.dump(manifest, fh, indent=2, default=str)
+            self.workspace.commit(
+                paths=[path],
+                description=(f"run: {report.steps} steps over {report.ticks} ticks "
+                             f"({report.errors} errors)"),
+            )
+        except Exception as exc:  # snapshotting must never sink the run
+            self.log("loom", f"oak snapshot ERROR: {exc!r}")
 
     async def _start_new_agents(self) -> None:
         # promote agents queued via ctx.spawn()/add() during a tick
@@ -140,7 +178,18 @@ class Loom:
         for rec in self._records.values():
             if not rec.started:
                 rec.started = True
+                self._open_session_branch(rec)
                 await rec.agent.setup(Context(self, rec))
+
+    def _open_session_branch(self, rec: AgentRecord) -> None:
+        """Give a freshly-started agent its own Oak branch (branch-per-session)."""
+        if self.workspace is None or not self.branch_per_session:
+            return
+        rec.branch = f"session/{rec.agent.name}"
+        try:
+            self.workspace.branch(rec.branch, description=f"session: {rec.agent.name}")
+        except Exception as exc:  # an Oak hiccup shouldn't kill the loom
+            self.log(rec.agent.name, f"oak branch ERROR: {exc!r}")
 
     async def _run_steps(self, chosen: List[AgentRecord], report: "RunReport") -> None:
         async def run_one(rec: AgentRecord) -> None:

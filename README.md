@@ -104,6 +104,7 @@ python -m loomloop run examples/swarm.py # worker swarm pulling a shared queue
 | **`Blackboard`** | Shared, versioned key/value workspace with an audit trail. |
 | **`Scheduler`** | Decides which ready agents run each tick: `AllReady` (default), `RoundRobin`, `Priority`. |
 | **`Backend`** | A pluggable model for `BrainLoop`: `EchoBackend`, `CallableBackend`, `ClaudeBackend`, or your own. Keeps LoomLoop provider-agnostic. |
+| **`OakRepo`** | Optional versioned substrate ([Oak](https://oak.space)): give each agent its own branch, commit work, snapshot runs. Degrades gracefully when `oak` isn't installed. |
 
 ### How a tick works
 
@@ -129,6 +130,10 @@ grab the same item (see `examples/swarm.py`).
 - **`examples/brains.py`** — two model-backed agents (`planner` → `critic`) wired
   to a pluggable backend. Runs offline by default; set `LOOMLOOP_BACKEND=claude`
   to use a real model.
+- **`examples/oak_session.py`** — branch-per-session collaboration over
+  [Oak](https://oak.space): each agent works on its own branch, commits as it
+  goes, and merges back. Runs offline (a recording runner prints the `oak`
+  commands instead of executing them).
 
 ### Model-agnostic brain agents
 
@@ -167,6 +172,40 @@ class MyBackend:
         ...
 ```
 
+### Versioned workspace with Oak
+
+Where the blackboard is in-memory shared state, [Oak](https://oak.space) is a
+content-addressed VCS *built for agents* whose unit of work is
+**branch-per-session**. Hand a `Loom` an `OakRepo` and every agent gets its own
+branch to commit work onto — exactly how Oak is meant to be driven — while the
+Loom coordinates merges and can snapshot the whole run into a commit:
+
+```python
+from loomloop import Loom, OakRepo, OakBranchLoop
+
+repo = OakRepo("./workspace")     # thin wrapper over the `oak` CLI
+loom = Loom(
+    workspace=repo,
+    branch_per_session=True,       # each agent → session/<name>
+    snapshot=True,                 # commit a run manifest at the end
+)
+
+# Any agent can now reach Oak through its Context:
+async def builder(ctx):
+    # ... do work, write files under repo.root ...
+    ctx.commit("built the parser")   # commits onto ctx.branch (session/builder)
+    return Step.done()
+
+# ...or use the turnkey agent that versions each message it receives:
+loom.add(OakBranchLoop("builder", listen="task", merge_into="main"))
+```
+
+Oak's engine is Rust (the [`oak`](https://oak.space/install) binary), so the
+adapter shells out to it. It's fully **optional**: nothing imports Oak until you
+use it, `OakRepo.available()` checks for the binary, and a Loom with no
+`workspace` behaves exactly as before. For tests and offline demos, inject a
+`RecordingRunner` to capture the `oak` commands instead of running them.
+
 ## Run the tests
 
 ```bash
@@ -183,9 +222,10 @@ loomloop/
   blackboard.py  # Blackboard (shared versioned state)
   scheduler.py   # AllReady / RoundRobin / Priority
   backend.py     # Backend protocol + Echo / Callable / Claude backends
-  agents/        # FunctionLoop, RelayLoop, @nanoloop, and the agnostic BrainLoop
+  oak.py         # OakRepo — optional versioned substrate (Oak, agent-native VCS)
+  agents/        # FunctionLoop, RelayLoop, @nanoloop, BrainLoop, OakBranchLoop
   cli.py         # python -m loomloop ...
-examples/        # pipeline + swarm + brains
+examples/        # pipeline + swarm + brains + oak_session
 tests/           # pytest suite
 ```
 

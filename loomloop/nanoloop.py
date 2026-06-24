@@ -10,6 +10,7 @@ from .message import Message
 
 if TYPE_CHECKING:  # pragma: no cover
     from .loom import Loom, AgentRecord
+    from .oak import OakRepo, OakResult
 
 
 class Status(enum.Enum):
@@ -105,6 +106,40 @@ class Context:
 
     def read(self, key: str, default: Any = None) -> Any:
         return self._loom.blackboard.get(key, default)
+
+    # -- versioned workspace (Oak) -------------------------------------
+    @property
+    def workspace(self) -> Optional["OakRepo"]:
+        """The Loom's Oak repository, or ``None`` if no workspace is configured.
+
+        Lets a nanoloop read/write/branch the shared substrate directly::
+
+            if ctx.workspace:
+                ctx.workspace.status()
+        """
+        return self._loom.workspace
+
+    @property
+    def branch(self) -> Optional[str]:
+        """This agent's session branch (branch-per-session), or ``None``."""
+        return self._record.branch
+
+    def commit(self, description: str, paths: Optional[List[str]] = None) -> "OakResult":
+        """Version this agent's work onto its session branch.
+
+        Switches to the agent's branch (if it has one) and commits. Raises a
+        clear error when no Oak workspace is configured, so the dependency stays
+        opt-in for agents that never touch it.
+        """
+        repo = self._loom.workspace
+        if repo is None:
+            raise RuntimeError(
+                "ctx.commit() needs an Oak workspace: "
+                "Loom(workspace=OakRepo(...))"
+            )
+        if self._record.branch:
+            repo.switch(self._record.branch)
+        return repo.commit(paths=paths, description=description)
 
     # -- lifecycle / orchestration -------------------------------------
     def subscribe(self, topic: str) -> None:

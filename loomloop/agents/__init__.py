@@ -8,5 +8,7 @@ that backend.
 
 from .function import FunctionLoop, RelayLoop, nanoloop
 from .brain import BrainLoop, LLMLoop
+from .oak_agent import OakBranchLoop
 
-__all__ = ["FunctionLoop", "RelayLoop", "nanoloop", "BrainLoop", "LLMLoop"]
+__all__ = ["FunctionLoop", "RelayLoop", "nanoloop", "BrainLoop", "LLMLoop",
+           "OakBranchLoop"]

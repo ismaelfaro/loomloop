@@ -36,9 +36,10 @@ from .nanoloop import NanoLoop, Context, Step, Status
 from .scheduler import Scheduler, AllReady, RoundRobin, Priority
 from .loom import Loom
 from .backend import Backend, EchoBackend, CallableBackend, ClaudeBackend
-from .agents import FunctionLoop, RelayLoop, nanoloop, BrainLoop, LLMLoop
+from .oak import OakRepo, OakError, RecordingRunner
+from .agents import FunctionLoop, RelayLoop, nanoloop, BrainLoop, LLMLoop, OakBranchLoop
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 __all__ = [
     "Message",
@@ -58,10 +59,15 @@ __all__ = [
     "EchoBackend",
     "CallableBackend",
     "ClaudeBackend",
+    # versioned workspace (Oak — agent-native VCS)
+    "OakRepo",
+    "OakError",
+    "RecordingRunner",
     # agents
     "FunctionLoop",
     "RelayLoop",
     "nanoloop",
     "BrainLoop",
     "LLMLoop",
+    "OakBranchLoop",
 ]
