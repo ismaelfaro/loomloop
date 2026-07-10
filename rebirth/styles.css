@@ -1,0 +1,184 @@
+/* styles.css — retro Roland/ReBirth-inspired UI */
+:root {
+  --bg: #0c0d10;
+  --panel: #16181d;
+  --panel-2: #1d2027;
+  --edge: #2b2f38;
+  --text: #e7e9ee;
+  --muted: #8a909c;
+  --amber: #ff8a3d;
+  --amber-dim: #7a4522;
+  --red: #ff4d5e;
+  --green: #4ade80;
+  --shadow: 0 2px 0 rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+  background:
+    radial-gradient(1200px 600px at 50% -10%, #1a1c22 0%, var(--bg) 60%);
+  color: var(--text);
+  min-height: 100vh;
+  padding-bottom: 40px;
+}
+
+.app { max-width: 1180px; margin: 0 auto; padding: 18px 16px; }
+
+/* ---------- Header / transport ---------- */
+.masthead {
+  display: flex; align-items: center; gap: 18px;
+  flex-wrap: wrap;
+  padding: 14px 18px;
+  background: linear-gradient(180deg, var(--panel-2), var(--panel));
+  border: 1px solid var(--edge);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
+}
+.brand { display: flex; flex-direction: column; }
+.brand h1 {
+  margin: 0; font-size: 22px; letter-spacing: .12em; font-weight: 800;
+  background: linear-gradient(90deg, var(--amber), #ffd08a);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.brand .tag { color: var(--muted); font-size: 11px; letter-spacing: .18em; text-transform: uppercase; }
+
+.transport { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+.btn {
+  border: 1px solid var(--edge);
+  background: linear-gradient(180deg, #23262e, #191b21);
+  color: var(--text);
+  padding: 9px 16px; border-radius: 10px; font-weight: 700; cursor: pointer;
+  box-shadow: var(--shadow); transition: transform .05s, border-color .15s;
+  font-size: 13px; letter-spacing: .05em;
+}
+.btn:active { transform: translateY(1px); }
+.btn.play.active { border-color: var(--green); color: var(--green); box-shadow: 0 0 14px rgba(74,222,128,.35); }
+.btn.stop { color: var(--red); }
+
+.ctrl { display: flex; flex-direction: column; gap: 4px; min-width: 120px; }
+.ctrl label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .12em; display:flex; justify-content: space-between; }
+.ctrl input[type=range] { width: 130px; }
+.ctrl .val { color: var(--amber); font-variant-numeric: tabular-nums; }
+
+.beat-leds { display: flex; gap: 6px; margin-left: auto; }
+.pat-led { width: 12px; height: 12px; border-radius: 50%; background: #24272f; border: 1px solid var(--edge); }
+.pat-led.beat-on { background: var(--amber); box-shadow: 0 0 10px var(--amber); }
+
+/* ---------- Pattern bank ---------- */
+.bank { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+.bank .lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing:.14em; margin-right:4px; }
+.bank-btn {
+  width: 40px; height: 34px; border-radius: 8px; cursor: pointer; font-weight: 700;
+  background: linear-gradient(180deg, #23262e, #191b21); color: var(--muted);
+  border: 1px solid var(--edge); box-shadow: var(--shadow);
+}
+.bank-btn.active { color: #101114; background: linear-gradient(180deg, var(--amber), #d9702f); border-color: var(--amber); }
+.bank .spacer { flex: 1; }
+
+/* ---------- Synth panels ---------- */
+.synths { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 16px; }
+
+.synth, .drums {
+  background: linear-gradient(180deg, var(--panel-2), var(--panel));
+  border: 1px solid var(--edge);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 14px 16px;
+}
+.synth { border-top: 3px solid var(--accent, var(--amber)); }
+
+.synth-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+.synth-title { font-weight: 800; letter-spacing: .16em; font-size: 15px; color: var(--accent, var(--amber)); }
+.synth-sub { font-size: 11px; color: var(--muted); letter-spacing: .1em; text-transform: uppercase; }
+
+.synth-body { display: flex; flex-direction: column; gap: 12px; }
+
+/* Knobs (sliders styled compact) */
+.knobs { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end;
+  padding: 10px 12px; background: #101216; border: 1px solid var(--edge); border-radius: 10px; }
+.knob { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 62px; }
+.knob-input { width: 62px; accent-color: var(--accent, var(--amber)); }
+.knob-label { font-size: 9.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.wave-btn {
+  width: 62px; padding: 6px 4px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 700;
+  background: #23262e; color: var(--text); border: 1px solid var(--edge);
+}
+
+/* Bass step grid */
+.bass-grid { display: grid; grid-template-columns: repeat(16, 1fr); gap: 5px; }
+.bass-step {
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  padding: 6px 3px; background: #101216; border: 1px solid var(--edge); border-radius: 8px;
+  position: relative;
+}
+.bass-step.beat { background: #14161c; border-color: #333844; }
+.bass-step.playing { box-shadow: inset 0 0 0 2px var(--accent, var(--amber)); }
+.note-label { font-size: 9px; color: var(--muted); font-variant-numeric: tabular-nums; height: 12px; }
+.bass-step.on .note-label { color: var(--accent, var(--amber)); font-weight: 700; }
+
+input.pitch {
+  -webkit-appearance: slider-vertical; appearance: slider-vertical;
+  writing-mode: vertical-lr; direction: rtl;
+  width: 20px; height: 88px; accent-color: var(--accent, var(--amber)); cursor: ns-resize;
+}
+.gate {
+  width: 26px; height: 16px; border-radius: 4px; cursor: pointer;
+  background: #23262e; border: 1px solid var(--edge);
+}
+.gate.lit { background: var(--accent, var(--amber)); box-shadow: 0 0 8px var(--accent, var(--amber)); }
+.flags { display: flex; gap: 3px; }
+.flag {
+  width: 18px; height: 16px; border-radius: 4px; cursor: pointer; font-size: 9px; font-weight: 800;
+  background: #1a1d24; color: var(--muted); border: 1px solid var(--edge); padding: 0;
+}
+.flag.acc.lit { background: var(--red); color: #fff; border-color: var(--red); }
+.flag.sld.lit { background: var(--green); color: #08210f; border-color: var(--green); }
+
+.row-tools { display: flex; gap: 8px; }
+.mini {
+  font-size: 11px; padding: 5px 12px; border-radius: 7px; cursor: pointer;
+  background: #23262e; color: var(--muted); border: 1px solid var(--edge); font-weight: 600;
+}
+.mini:hover { color: var(--text); border-color: var(--accent, var(--amber)); }
+
+/* ---------- Drum machine ---------- */
+.drum-table { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+.drum-row { display: grid; grid-template-columns: 96px 70px 1fr; align-items: center; gap: 10px; }
+.drum-label {
+  text-align: left; font-size: 11px; font-weight: 700; color: var(--text);
+  background: #101216; border: 1px solid var(--edge); border-radius: 7px; padding: 7px 8px; cursor: pointer;
+}
+.drum-label:hover { border-color: var(--amber); }
+.drum-vol { width: 70px; accent-color: var(--amber); }
+.drum-cells { display: grid; grid-template-columns: repeat(16, 1fr); gap: 5px; }
+.drum-step {
+  height: 26px; border-radius: 6px; cursor: pointer;
+  background: #14161c; border: 1px solid var(--edge); padding: 0;
+}
+.drum-step.beat { background: #191c23; }
+.drum-step.on { background: var(--amber); border-color: var(--amber); box-shadow: 0 0 8px rgba(255,138,61,.5); }
+.drum-step.accent { background: var(--red); border-color: var(--red); box-shadow: 0 0 10px rgba(255,77,94,.6); }
+.drum-step.playing { outline: 2px solid #fff; outline-offset: -2px; }
+
+.drum-tools { margin-top: 4px; }
+
+/* ---------- FX rack ---------- */
+.fx { display: flex; gap: 18px; flex-wrap: wrap; align-items: flex-end;
+  padding: 14px 16px; background: linear-gradient(180deg, var(--panel-2), var(--panel));
+  border: 1px solid var(--edge); border-radius: 14px; box-shadow: var(--shadow); }
+.fx .synth-title { margin-right: 8px; }
+.fx .ctrl { min-width: 90px; }
+
+.hint { color: var(--muted); font-size: 11px; margin-top: 14px; text-align: center; line-height: 1.6; }
+.hint kbd { background: #23262e; border: 1px solid var(--edge); border-radius: 4px; padding: 1px 6px; font-size: 10px; }
+
+@media (max-width: 720px) {
+  input.pitch { height: 60px; }
+  .drum-row { grid-template-columns: 72px 44px 1fr; }
+  .bass-grid, .drum-cells { gap: 3px; }
+}

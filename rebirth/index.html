@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ReLoom · ReBirth-inspired Web Simulator</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%9B%EF%B8%8F%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+
+    <!-- Masthead / transport -->
+    <header class="masthead">
+      <div class="brand">
+        <h1>RE·LOOM</h1>
+        <span class="tag">Acid Bass &amp; Rhythm Composer</span>
+      </div>
+
+      <div class="transport">
+        <button id="playBtn" class="btn play">▶ Play</button>
+        <button id="stopBtn" class="btn stop">■ Stop</button>
+
+        <div class="ctrl">
+          <label>Tempo <span class="val" id="bpmVal">130</span></label>
+          <input id="bpm" type="range" min="60" max="200" step="1" value="130" />
+        </div>
+        <div class="ctrl">
+          <label>Swing <span class="val" id="swingVal">0%</span></label>
+          <input id="swing" type="range" min="0" max="0.7" step="0.01" value="0" />
+        </div>
+      </div>
+
+      <div class="beat-leds">
+        <span class="pat-led"></span><span class="pat-led"></span>
+        <span class="pat-led"></span><span class="pat-led"></span>
+      </div>
+    </header>
+
+    <!-- Pattern bank -->
+    <div class="bank">
+      <span class="lbl">Pattern</span>
+      <button class="bank-btn active">A</button>
+      <button class="bank-btn">B</button>
+      <button class="bank-btn">C</button>
+      <button class="bank-btn">D</button>
+      <span class="spacer"></span>
+      <button id="copyBtn" class="mini">Copy → Next</button>
+      <button id="clearAllBtn" class="mini">Clear Pattern</button>
+    </div>
+
+    <!-- 303 basslines -->
+    <section class="synths" id="synths"></section>
+
+    <!-- Drum machine -->
+    <section id="drumsMount"></section>
+
+    <!-- Master FX rack -->
+    <section class="fx" style="margin-top:16px">
+      <span class="synth-title">MASTER FX</span>
+      <div class="ctrl">
+        <label>Distortion</label>
+        <input id="distortion" type="range" min="0" max="1" step="0.01" value="0.12" />
+      </div>
+      <div class="ctrl">
+        <label>Delay</label>
+        <input id="delay" type="range" min="0" max="1" step="0.01" value="0.15" />
+      </div>
+      <div class="ctrl">
+        <label>Feedback</label>
+        <input id="feedback" type="range" min="0" max="0.9" step="0.01" value="0.35" />
+      </div>
+      <div class="ctrl">
+        <label>Master</label>
+        <input id="master" type="range" min="0" max="1" step="0.01" value="0.85" />
+      </div>
+    </section>
+
+    <p class="hint">
+      Two <strong>TB-303</strong>-style bass lines + an <strong>808/909</strong>-style drum machine, all synthesized live in your browser.<br />
+      Drag a step's slider to set pitch · toggle <strong>Gate</strong> / <strong>A</strong>ccent / <strong>S</strong>lide · click a drum cell to cycle off → hit → accent · <kbd>Space</kbd> to play/stop.
+    </p>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
